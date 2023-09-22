@@ -1,3 +1,6 @@
 *.dat
 *.bz2
 morphenv/
+raw/
+morphed/
+*.csv
