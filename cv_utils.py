@@ -11,8 +11,7 @@ import pandas as pd
 import numpy as np
 import cv2 as cv
 import random
-import sys
-import imutils
+
 
 def readPoints(path):
     '''Read points from .tem file'''

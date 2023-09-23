@@ -1,18 +1,63 @@
-import os
-import sys
-import cv_utils
 
+# Source: https://gitlab.idiap.ch/bob/bob.paper.icassp2022_morph_generate
+
+
+import os
+import cv_utils
 from PIL import Image
 import pandas as pd
-
 import numpy as np
 import cv2 as cv
-
 import bz2
 import wget
 import dlib
+import argparse
+import time
+from tqdm import tqdm
 
 DLIB_LMD_PATH = "shape_predictor_68_face_landmarks.dat"
+
+def parse_arguments():
+    '''Parses in CLI arguments'''
+    parser = argparse.ArgumentParser(
+                    prog='opencv_morph.py',
+                    description='A CLI tool for generating OpenCV morphed images of faces',
+                    epilog='Disclaimer: this code comes from this reposioty: https://gitlab.idiap.ch/bob/bob.paper.icassp2022_morph_generate')
+
+    parser.add_argument('-a', '--alpha', nargs=1, type=check_float_range, default=[0.5], help="Provide the morphing's alpha value [0, 1] (default: 0.5)", required=False)
+
+    requiredArgs = parser.add_argument_group('Required arguments')
+
+    requiredArgs.add_argument('-r', '--raw', type=check_dir_path, help='Provide the folder path containing the raw images.', required=True)
+    requiredArgs.add_argument('-m', '--morphed', type=check_dir_path, help='Provide the folder path for the results.', required=True)
+    requiredArgs.add_argument('-p', '--pairs', type=check_dir_file, help='Provide the file path of the  `.csv` file containing the names of the pair of images to be morphed.', required=True)
+    return parser.parse_args()
+
+def check_float_range(arg, MIN_VAL=0.0, MAX_VAL=1.0):
+    '''Type function for argparse - a float within the predefined bounds.'''
+    try:
+        f = float(arg)
+    except ValueError:    
+        raise argparse.ArgumentTypeError("Must be a floating point number.")
+    if f < MIN_VAL or f > MAX_VAL:
+        raise argparse.ArgumentTypeError("Argument must be < " + str(MAX_VAL) + "and > " + str(MIN_VAL))
+    return f
+
+
+def check_dir_path(path):
+    '''Checks if the given folder path as an argument exists.'''
+    if os.path.isdir(path) or path == 'results':
+        return path
+    else:
+        raise argparse.ArgumentTypeError(f"readable_dir:{path} is not a valid path.")
+
+def check_dir_file(path):
+    '''Checks if the given file path as an argument exists.'''
+    if os.path.exists(path):
+        return path
+    else:
+        raise argparse.ArgumentTypeError(f"readable_dir:{path} is not a valid file.")
+
 
 def make_opencv_morphs(PERMUTATIONS, SRC_DIR, dst_path, detector, predictor, fa, alpha):
     '''
@@ -25,9 +70,12 @@ def make_opencv_morphs(PERMUTATIONS, SRC_DIR, dst_path, detector, predictor, fa,
     https://learnopencv.com
     '''
     print('Generating OpenCV morphs with alpha', alpha)
-    # Loop
+    
+    # Loop with progressbar
+
+    pbar = tqdm(total=len(PERMUTATIONS))
     for f1, f2 in PERMUTATIONS:
-        print('Morphing files:', f1, f2)
+        #print('Morphing files:', f1, f2)
         # Read images
         img1 = np.array(Image.open(os.path.join(SRC_DIR, f1)))
         img2 = np.array(Image.open(os.path.join(SRC_DIR, f2)))
@@ -93,8 +141,11 @@ def make_opencv_morphs(PERMUTATIONS, SRC_DIR, dst_path, detector, predictor, fa,
                     
         # Save morphed image
         newname = os.path.join(dst_path, f1 + '_' + f2)
-        print(newname, imgMorph.shape)
+        #print(newname, imgMorph.shape)
         cv.imwrite(newname, imgMorph)
+        pbar.update(1)
+
+    pbar.close()
 
 
 def download_dlib_lmd():
@@ -112,7 +163,7 @@ def download_dlib_lmd():
             dst.write(src.read())
         print("Success !")
     else:
-        print('dlib landmark detector already downloaded in {}'.format(DLIB_LMD_PATH))
+        print(f'dlib landmark detector already downloaded in {DLIB_LMD_PATH}')
 
 
 
@@ -120,24 +171,18 @@ def main():
     '''
     Makes OpenCV morphs between selected images given in the `.csv` file.
     '''
+
+    # Parse arguments
+    args = parse_arguments()
     
+    # download dlib model
     download_dlib_lmd()
     
-    
-    # Parse arguments
-    
     # Define variables
-    PERMUTATIONS  = pd.read_csv('pairs.csv', header=None).values
+    PERMUTATIONS  = pd.read_csv(args.pairs, header=None).values
 
-    SRC_DIR       = 'raw'
-    DST_DIR       = 'morphs'
-    ALPHA         = 0.5
-
-    SRC_SUFFIX    = '.png'
-    DST_SUFFIX    = '.png'
     WIDTH         = 360
     HEIGHT        = 480
-
 
     # Instantiate dlib detector and predictors
     print('Instantiating modules.')
@@ -146,11 +191,12 @@ def main():
     fa        = cv_utils.FaceAligner(predictor, desiredFaceWidth=WIDTH, desiredFaceHeight=HEIGHT)
 
     # OpenCV Morphs
-    make_opencv_morphs(PERMUTATIONS, SRC_DIR, DST_DIR, detector, predictor, fa, ALPHA)
-
+    start = time.perf_counter()
+    make_opencv_morphs(PERMUTATIONS, args.raw, args.morphed, detector, predictor, fa, args.alpha[0])
+    end = time.perf_counter()
 
     # Finish
-    print('Job completed !')
+    print(f'Job completed in {end - start}')
 
 
 if __name__ == "__main__":

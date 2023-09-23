@@ -4,3 +4,4 @@ morphenv/
 raw/
 morphed/
 *.csv
+__pycache__
