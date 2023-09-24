@@ -6,7 +6,7 @@ import cv2 as cv
 from skimage.feature import multiblock_lbp
 from skimage.feature import local_binary_pattern
 import numpy as np
-import pandas as pd
+import csv
 
 images = [cv.imread("raw/" + file) for file in os.listdir("raw/")]
 images_morphed = [cv.imread("morphed/" + file) for file in os.listdir("morphed/")]
@@ -55,7 +55,7 @@ point_2y = 856
 
 cropped_images = [ img[point_1y:point_2y, point_1x:point_2x] for img in images]
 
-#cropped_images_morphed = [ img[point_1y:point_2y, point_1x:point_2x] for img in images_morphed]
+cropped_images_morphed = [ img[point_1y:point_2y, point_1x:point_2x] for img in images_morphed]
 
 # plt.figure(figsize=(7,7))
 # for i,img in enumerate(cropped_images):
@@ -74,107 +74,72 @@ cropped_images = [ img[point_1y:point_2y, point_1x:point_2x] for img in images]
 
 
 
-test_image = cropped_images[0]
+def extract_feature_vector(image, plot=False):
+  
+    # resize
+    resized = cv.resize(image, (300,300), interpolation = cv.INTER_AREA)
 
-print(test_image.shape)
+    # convert to gray scale
+    resized = cv.cvtColor(resized, cv.COLOR_RGB2GRAY)
 
-# resize
-resized = cv.resize(test_image, (300,300), interpolation = cv.INTER_AREA)
-print(resized.shape)
-# convert to gray scale
-resized = cv.cvtColor(resized, cv.COLOR_RGB2GRAY)
+    mblbp_image = np.zeros((300,300))
 
-lbp = local_binary_pattern(resized, 8, 1)
+    for idx, x in np.ndenumerate(resized):
 
+        mblbp_image[idx[0],idx[1]] = multiblock_lbp(resized, idx[0], idx[1], 3, 3)
 
-print(lbp)
-
-print(type(resized))
-print(type(lbp))
-print(lbp.shape)
+    hist, bin = np.histogram(mblbp_image.ravel(),256,[0,255])
 
 
-mblbp_image = np.zeros((300,300))
+    if(plot):
+
+        plt.figure(figsize=(17,7))
+
+        plt.subplot(1,3,1).set_title("Starting Image")
+        plt.imshow(resized, cmap='gray', vmin=0, vmax=255)
+
+        plt.subplot(1,3,2).set_title("MB-LBP image")
+        plt.imshow(mblbp_image, cmap='gray', vmin=0, vmax=255)
+
+        plt.subplot(1,3,3).set_title("MB-LBP histogram")
+        plt.xlim([0,255])
+        plt.plot(hist)
+
+        plt.show()
 
 
-for idx, x in np.ndenumerate(resized):
+    return hist
 
-  mblbp_image[idx[0],idx[1]] = multiblock_lbp(resized, idx[0], idx[1], 3, 3)
+# print("hist")
+# print(type(hist))
+# print(hist.shape)
 
-
-
-
-
-
-
+# print(type(bin))
+# print(bin.shape)
 
 
+# df = pd.DataFrame([hist], dtype = int)
 
 
-plt.figure(figsize=(7,7))
+# print(df)
 
-plt.subplot(2,3,1).set_title("Starting Image")
-plt.imshow(resized, cmap='gray', vmin=0, vmax=255)
+filename = 'vecs1.csv'
 
-plt.subplot(2,3,2).set_title("LBP image")
-plt.imshow(lbp, cmap='gray', vmin=0, vmax=255)
-
-plt.subplot(2,3,3).set_title("MB-LBP image")
-plt.imshow(mblbp_image, cmap='gray', vmin=0, vmax=255)
+with open(filename, 'w', encoding='UTF8') as f:
+    writer = csv.writer(f)
 
 
-plt.subplot(2,3,4)
-hist,bin = np.histogram(resized.ravel(),256,[0,255])
-plt.xlim([0,255])
-plt.plot(hist)
-plt.title('histogram')
+    for img in cropped_images:
+
+        writer.writerow(extract_feature_vector(img))
+
+filename = 'vecs2.csv'
+
+with open(filename, 'w', encoding='UTF8') as f:
+    writer = csv.writer(f)
 
 
-plt.subplot(2,3,5)
-hist,bin = np.histogram(lbp.ravel(),256,[0,255])
-plt.xlim([0,255])
-plt.plot(hist)
-plt.title('histogram')
+    for img in cropped_images_morphed:
 
-
-plt.subplot(2,3,6)
-hist,bin = np.histogram(mblbp_image.ravel(),256,[0,255])
-plt.xlim([0,255])
-plt.plot(hist)
-plt.title('histogram')
-
-
-
-
-print("hist")
-print(type(hist))
-print(hist.shape)
-
-print(type(bin))
-print(bin.shape)
-
-
-df = pd.DataFrame([hist], dtype = int)
-
-
-print(df)
-
-plt.show()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        writer.writerow(extract_feature_vector(img))
 
