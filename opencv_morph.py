@@ -89,7 +89,7 @@ def make_opencv_morphs(PERMUTATIONS, SRC_DIR, dst_path, detector, predictor, fa,
         rects1 = detector(img1, 1)
         rects2 = detector(img2, 1)
 
-        # Align images
+        # Align images. It is assumed that images are already aligned
         #img1 = fa.align(img1, gray1, rects1[0])    # skipping this step as there is a bug in
         #img2 = fa.align(img2, gray2, rects2[0])    # imutils library. More here:
                                                     # https://stackoverflow.com/questions/70674243/how-to-detect-faces-with-imutils
