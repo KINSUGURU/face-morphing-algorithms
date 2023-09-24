@@ -8,12 +8,11 @@ from PIL import Image
 import pandas as pd
 import numpy as np
 import cv2 as cv
-import bz2
-import wget
 import dlib
 import argparse
 import time
 from tqdm import tqdm
+from download_models import download_dlib_lmd
 
 DLIB_LMD_PATH = "shape_predictor_68_face_landmarks.dat"
 
@@ -148,25 +147,6 @@ def make_opencv_morphs(PERMUTATIONS, SRC_DIR, dst_path, detector, predictor, fa,
     pbar.close()
 
 
-def download_dlib_lmd():
-    dlib_url = "http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2"
-
-    if not os.path.exists(DLIB_LMD_PATH):
-        
-        print('Downloading dlib face landmarks detector...')
-        
-        tmp_file = wget.download(dlib_url)
-
-        print("")
-
-        with bz2.BZ2File(tmp_file, 'rb') as src, open(DLIB_LMD_PATH, 'wb') as dst:
-            dst.write(src.read())
-        print("Success !")
-    else:
-        print(f'dlib landmark detector already downloaded in {DLIB_LMD_PATH}')
-
-
-
 def main():
     '''
     Makes OpenCV morphs between selected images given in the `.csv` file.
@@ -176,7 +156,7 @@ def main():
     args = parse_arguments()
     
     # download dlib model
-    download_dlib_lmd()
+    download_dlib_lmd(DLIB_LMD_PATH)
     
     # Define variables
     PERMUTATIONS  = pd.read_csv(args.pairs, header=None).values
