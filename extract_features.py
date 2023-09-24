@@ -4,73 +4,58 @@ import matplotlib.pyplot as plt
 import os
 import cv2 as cv
 from skimage.feature import multiblock_lbp
-from skimage.feature import local_binary_pattern
 import numpy as np
 import csv
+import argparse
+import auxiliary as aux
+from tqdm import tqdm
 
-images = [cv.imread("raw/" + file) for file in os.listdir("raw/")]
-images_morphed = [cv.imread("morphed/" + file) for file in os.listdir("morphed/")]
+def parse_arguments():
+    '''Parses in CLI arguments'''
+    parser = argparse.ArgumentParser(
+                    prog='extract_features.py',
+                    description='A CLI tool for extracting texture feature from images of faces.')
 
-# crop images with hard coded points (assumed that images were aligned before morph)
-point_1x = 300
-point_1y = 342
+    parser.add_argument('-v', '--visualize', action='store_true', help='Visualize cropping and feature extraction (only when processing a single image)')  # on/off flag
+    parser.add_argument('-i', '--image', type=aux.check_dir_file, help='Provide the path of a single image file for feature extraction.')
+    parser.add_argument('-f', '--folder', type=aux.check_dir_path, help='Provide the folder path containing images for feature extraction.')
 
-point_2x = 717
-point_2y = 856
+    requiredArgs = parser.add_argument_group('Required arguments')
+    
+    requiredArgs.add_argument('-o', '--output', help='Name of file that will contain feature vector(s).', required=True)
 
-
-# visualize cropping
-
-# plt.figure(figsize=(7,7))
-
-# for i,img in enumerate(images):
-
-#     #img = cv.rectangle(img, (point_1x, point_1y), (point_2x, point_2y), (0, 255, 0), 3)
-
-#     plt.subplot(2,len(images),i+1)
-#     plt.imshow(cv.cvtColor(img, cv.COLOR_BGR2RGB))
-
-#     cropped = img[point_1y:point_2y, point_1x:point_2x]
-
-#     plt.subplot(2,len(images),i+1+len(images))
-#     plt.imshow(cv.cvtColor(cropped, cv.COLOR_BGR2RGB))
+    return parser.parse_args()
 
 
-# plt.figure(figsize=(7,7))
 
-# for i,img in enumerate(images_morphed):
+def crop_image(image, plot=False):
 
-#     #img = cv.rectangle(img, (point_1x, point_1y), (point_2x, point_2y), (0, 255, 0), 3)
+    # crop images with hard coded points (assumed that images were aligned with image_aligner.py)
+    point_1x = 300
+    point_1y = 342
 
-#     plt.subplot(2,len(images_morphed),i+1)
-#     plt.imshow(cv.cvtColor(img, cv.COLOR_BGR2RGB))
+    point_2x = 717
+    point_2y = 856
 
-#     cropped = img[point_1y:point_2y, point_1x:point_2x]
+    # visualize cropping
+    if(plot):
 
-#     plt.subplot(2,len(images_morphed),i+1+len(images_morphed))
-#     plt.imshow(cv.cvtColor(cropped, cv.COLOR_BGR2RGB))
+        plt.figure(figsize=(7,7))
 
-# plt.show()
+        plt.subplot(1,2,1)
+        plt.imshow(cv.cvtColor(image, cv.COLOR_BGR2RGB))
 
+        cropped = image[point_1y:point_2y, point_1x:point_2x]
 
-cropped_images = [ img[point_1y:point_2y, point_1x:point_2x] for img in images]
+        plt.subplot(1,2,2)
+        plt.imshow(cv.cvtColor(cropped, cv.COLOR_BGR2RGB))
 
-cropped_images_morphed = [ img[point_1y:point_2y, point_1x:point_2x] for img in images_morphed]
+        plt.show()
 
-# plt.figure(figsize=(7,7))
-# for i,img in enumerate(cropped_images):
+        pass
+    
+    return image[point_1y:point_2y, point_1x:point_2x]
 
-#     plt.subplot(1,len(cropped_images),i+1)
-#     plt.imshow(cv.cvtColor(img, cv.COLOR_BGR2RGB))
-
-
-# plt.figure(figsize=(7,7))
-# for i,img in enumerate(cropped_images_morphed):
-
-#     plt.subplot(1,len(cropped_images_morphed),i+1)
-#     plt.imshow(cv.cvtColor(img, cv.COLOR_BGR2RGB))
-
-# plt.show()
 
 
 
@@ -110,36 +95,61 @@ def extract_feature_vector(image, plot=False):
 
     return hist
 
-# print("hist")
-# print(type(hist))
-# print(hist.shape)
-
-# print(type(bin))
-# print(bin.shape)
 
 
-# df = pd.DataFrame([hist], dtype = int)
+def main():
+
+    # Parse arguments
+    args = parse_arguments()
 
 
-# print(df)
+    if args.image and args.folder:
+        raise argparse.ArgumentTypeError("Cannot use --image and --folder together")
 
-filename = 'vecs1.csv'
+    if not(args.image) and not(args.folder):
+        raise argparse.ArgumentTypeError("You must specify a folder or an image as input")
+    
+    if args.image:
+        print(f"Processing image {args.image}")
 
-with open(filename, 'w', encoding='UTF8') as f:
-    writer = csv.writer(f)
+        image = cv.imread(args.image)
+
+        cropped_image = crop_image(image, args.visualize)
+
+        v = extract_feature_vector(cropped_image, args.visualize)
+
+        print(v)
+
+        with open(args.output, 'w', encoding='UTF8') as f:
+            writer = csv.writer(f)
+            writer.writerow(v)
+
+        print(f'Writen vector to file {args.output}')
+    
+    if args.folder:
+
+        print(f"Processing images in {args.folder}")
+
+        # load images with opencv
+        images = [ cv.imread(os.path.join(args.folder, file)) for file in os.listdir(args.folder) ]
+
+        cropped_images = [ crop_image(img) for img in images]
+
+        pbar = tqdm(total=len(cropped_images))
+
+        with open(args.output, 'w', encoding='UTF8') as f:
+            writer = csv.writer(f)
+
+            for img in cropped_images:
+
+                writer.writerow(extract_feature_vector(img))
+                pbar.update(1)
+
+        pbar.close()
+
+        print(f'Writen vectors to file {args.output}')
 
 
-    for img in cropped_images:
-
-        writer.writerow(extract_feature_vector(img))
-
-filename = 'vecs2.csv'
-
-with open(filename, 'w', encoding='UTF8') as f:
-    writer = csv.writer(f)
-
-
-    for img in cropped_images_morphed:
-
-        writer.writerow(extract_feature_vector(img))
+if __name__ == "__main__":
+    main()
 
