@@ -5,16 +5,29 @@ import numpy as np
 import scipy.ndimage
 import os
 import PIL.Image
-from download_models import download_dlib_lmd
+import auxiliary as aux
 import sys
+import argparse
 
 from LandmarksDetector import LandmarksDetector
 
-# user defined parameter:
-LANDMARKS_MODEL_URL = 'http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2'
-
 DLIB_LMD_PATH = "shape_predictor_68_face_landmarks.dat"
 
+
+def parse_arguments():
+    '''Parses in CLI arguments'''
+    parser = argparse.ArgumentParser(
+                    prog='image_aligner.py',
+                    description='A CLI tool for aligning images of faces using FFHQ\'s script.',
+                    epilog='Disclaimer: this code comes from this reposioty: https://github.com/woctezuma/stylegan2/tree/tiled-projector')
+
+    
+    requiredArgs = parser.add_argument_group('Required arguments')
+
+    requiredArgs.add_argument('-r', '--raw', type=aux.check_dir_path, help='Provide the folder path containing the raw images.', required=True)
+    requiredArgs.add_argument('-a', '--aligned', type=aux.check_dir_path, help='Provide the folder path for the results (aligned images).', required=True)
+    
+    return parser.parse_args()
 
 def create_aligned_image(src_file, out_file, face_landmarks,  output_size=1024, transform_size=4096, enable_padding=True):
 
@@ -101,24 +114,27 @@ def create_aligned_image(src_file, out_file, face_landmarks,  output_size=1024, 
 
 
 
-if __name__ == "__main__":
-
+def main():
+    # Parse arguments
+    args = parse_arguments()
 
     # download dlib model
-    download_dlib_lmd(DLIB_LMD_PATH)
+    aux.download_dlib_lmd(DLIB_LMD_PATH)
 
-    RAW_IMAGES_DIR = sys.argv[1]
-    ALIGNED_IMAGES_DIR = sys.argv[2]
-     
+
     landmarksDetector = LandmarksDetector(DLIB_LMD_PATH)
 
-    for img_name in [f for f in os.listdir(RAW_IMAGES_DIR) if f[0] not in '._']:
+    for img_name in os.listdir(args.raw):
 
-        raw_img_path = os.path.join(RAW_IMAGES_DIR, img_name)
+        raw_img_path = os.path.join(args.raw, img_name)
 
         for i, face_landmarks in enumerate(landmarksDetector.get_landmarks(raw_img_path), start=1):
 
             face_img_name = '%s_%02d.png' % (os.path.splitext(img_name)[0], i)
-            aligned_face_path = os.path.join(ALIGNED_IMAGES_DIR, face_img_name)
-            os.makedirs(ALIGNED_IMAGES_DIR, exist_ok=True)
+            aligned_face_path = os.path.join(args.aligned, face_img_name)
+            os.makedirs(args.aligned, exist_ok=True)
             create_aligned_image(raw_img_path, aligned_face_path, face_landmarks)
+
+
+if __name__ == "__main__":
+    main()
