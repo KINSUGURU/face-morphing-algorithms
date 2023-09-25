@@ -140,11 +140,11 @@ def main():
         axs[1].legend(title = "Testing set:")
 
 
-        disp = ConfusionMatrixDisplay(confusion_matrix=cm_test)
+        disp = ConfusionMatrixDisplay(confusion_matrix=cm_test, display_labels=['bona fide','morphed'])
         disp.plot()
         plt.title("Confusion Matrix on Testing Set")
 
-        disp = ConfusionMatrixDisplay(confusion_matrix=cm_train)
+        disp = ConfusionMatrixDisplay(confusion_matrix=cm_train, display_labels=['bona fide','morphed'])
         disp.plot()
         plt.title("Confusion Matrix on Training Set")
 
