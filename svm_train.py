@@ -15,8 +15,7 @@ def parse_arguments():
                     prog='svm_train.py',
                     description='A CLI tool for training a Support Vector Machine model for morphing detection.'+
                     'You must specify the files containing the feature vectors of each class (bona fide and morphed).\n'+
-                    'Class labels: 0 -> bona fide, 1 -> morphed',
-                    epilog='')
+                    'Class labels: 0 -> bona fide, 1 -> morphed')
 
 
     parser.add_argument('-v', '--visualize', action='store_true', help='Plot graphs for the dataset and Confusion matrix')  # on/off flag
@@ -150,19 +149,6 @@ def main():
 
 
         plt.show()
-
-
-
-
-    # # load the model from disk
-    # loaded_model = joblib.load('finalized_model.sav')
-
-
-    # y_predict = loaded_model.predict(X_test)
-    # print("Accuracy:",metrics.accuracy_score(y_test, y_predict))
-
-
-
 
 
 if __name__ == "__main__":
