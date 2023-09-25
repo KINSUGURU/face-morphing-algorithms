@@ -86,7 +86,7 @@ def main():
             # load the model from disk
             loaded_model = joblib.load(args.model)
 
-            print(v)
+            #print(v)
 
             predict = loaded_model.predict(v.reshape(1, -1))
 
@@ -117,14 +117,14 @@ def main():
 
         df = pd.read_csv(filepath_or_buffer=args.csv, header=None)
 
-        print(df)
+        #print(df)
 
         # load the model from disk
         loaded_model = joblib.load(args.model)
 
         predict = loaded_model.predict(df)
 
-        print(predict)
+        #print(predict)
 
         print("Result report:")
         print(f" \t {len([x for x in predict if x==0])} images classified as 'bona fide'")

@@ -67,10 +67,10 @@ def main():
 
     X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.2, random_state=23)
 
-    print("x train")
-    print(X_train)
-    print("y train")
-    print(y_train)
+    # print("x train")
+    # print(X_train)
+    # print("y train")
+    # print(y_train)
 
 
     # Creating Support Vector Machine Model

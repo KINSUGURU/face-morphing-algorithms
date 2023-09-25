@@ -1,13 +1,20 @@
 # Face Morphing Algorithms
 
-This reposiotry is a part of my research regrarding Face Morphing. This includes links, python notebooks and scripts used for experimental Face Morphing Generation and Detection. I also used open source code. Check the references and sources for details.
+This reposiotry is a part of my research regrarding Face Morphing. This includes links, python notebooks and scripts used for experimental Face Morphing Generation and Detection. The code is heavly based on existing open source code. Check the references and sources for details.
 
-## Details
 
 ### What is face morphing
 
+There are several known techniques for face morphing generation:
 
-## Usage
+- Landmark based: OpenCV, Facemorpher and more
+- GAN based: StyleGAN2, MIPGAN2
+- Diffusion based: using interpolation with Diffusion autoencoders (this is a relatively new approach)
+
+This repository has the notebook ```stylegan2_face_morphing_basics.ipynb``` as an experimental introduction to StyleGAN2 face morphing. Open with Google colab.
+
+We also provide the script ```opencv_morph.py```. As the title suggests it generates morphs with OpenCV.
+
 
 ### Requirements
 It is advised to use a [Python virtual enviroment](https://docs.python.org/3/library/venv.html) or [conda/miniconda](https://docs.conda.io/projects/miniconda/en/latest/). The version of Python used is ```3.11.2```. Code last tested on Debian 12.
@@ -22,59 +29,45 @@ Note: the ```image_aligner.py``` uses an older verion of the Pillow library (9.5
 
 ### Example usage
 
-
-for more information see the following
-
-### Image alignment
-
-Use ```image_aligner.py```
+1. Align your images
 ```
-$ python image_aligner.py -h
-
-usage: image_aligner.py [-h] -r RAW -a ALIGNED
-
-options:
-  -h, --help            show this help message and exit
-
-Required arguments:
-  -r RAW, --raw RAW     Provide the folder path containing the raw images.
-  -a ALIGNED, --aligned ALIGNED
-                        Provide the folder path for the results (aligned images).
+$ python image_aligner.py -r raw/ -a aligned/
 ```
+Use ```image_aligner.py``` as seen above to align your images. Input images are in folder ```raw``` and output images in folder ```aligned```. The code used comes from the official [FFHQ Dataset repository](https://github.com/NVlabs/ffhq-dataset) and is also implemented in [woctezuma's fork of stylegan2](https://github.com/woctezuma/stylegan2/tree/tiled-projector).
 
+2. Generate Morphs
+```
+$ python opencv_morph.py -s aligned/ -m morphs/ -p ~pairs.csv
+```
+This is script is used to generate landmark-based OpenCV morphs. The code is from this [repository](https://gitlab.idiap.ch/bob/bob.paper.icassp2022_morph_generate) and is based on [learnopencv.com](https://learnopencv.com/face-morph-using-opencv-cpp-python/).
 
-### Morphing Generation
-
-There are several known techniques for face morphing generation:
-
-- Landmark based: OpenCV, Facemorpher and more
-- GAN based: StyleGAN2, MIPGAN2
-- Diffusion based: using interpolation with Diffusion autoencoders (this is a relatively new approach)
-
-This repository has the notebook ```stylegan2_face_morphing_basics.ipynb``` as an experimental introduction to StyleGAN2 face morphing. Open with Google colab.
-
-We also provide the script ```opencv_morph.py```. As the title suggests it generates morphs with OpenCV.
+3. Extract feature vectors
 
 ```
-$ python opencv_morph.py -h
+$ python extract_features.py -f aligned/ -o bona_fide_vectors.csv
+$ python extract_features.py -f morphed/ -o morphed_vectors.csv
+```
+The feature vectors are extracted by using **Multi-Block Local Binary Patterns**. This is a texture based feaure extraction and it creates a new image from which we use the histogram as a feature vector.
 
-usage: opencv_morph.py [-h] [-a ALPHA] -s SRC -m MORPHED -p PAIRS
+4. Train SVM
 
-options:
-  -h, --help            show this help message and exit
-  -a ALPHA, --alpha ALPHA
-                        Provide the morphing's alpha value [0, 1] (default: 0.5)
+Now we have our vectors from the two classes in separate .csv files. We can train our own model.
 
-Required arguments:
-  -s SRC, --src SRC     Provide the folder path containing the raw images.
-  -m MORPHED, --morphed MORPHED
-                        Provide the folder path for the results.
-  -p PAIRS, --pairs PAIRS
-                        Provide the file path of the `.csv` file containing the names of the pair of images to be morphed.
+```
+$ python svm_train.py -b bona_fide_vectors.csv -m morphed_vectors.csv -o my_model.sav -v
 ```
 
-### Morphing Detection
+5. Use the model
 
-
+```
+$ python svm_predict.py  -m my_model.sav -i my_image.png -v
+```
 
 ## References and sources
+
+I suggest you check them out if you are currently researching for the topic of Face Morphing.
+
+- [bob.paper.icassp2022_morph_generate](https://gitlab.idiap.ch/bob/bob.paper.icassp2022_morph_generate)
+- [learnopencv.com](https://learnopencv.com/face-morph-using-opencv-cpp-python/)
+- [FFHQ Dataset repository](https://github.com/NVlabs/ffhq-dataset)
+- [woctezuma's fork of stylegan2](https://github.com/woctezuma/stylegan2/tree/tiled-projector)
