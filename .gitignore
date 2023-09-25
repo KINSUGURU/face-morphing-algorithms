@@ -6,3 +6,4 @@ morphed/
 aligned/
 *.csv
 __pycache__
+*.sav
