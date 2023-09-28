@@ -7,3 +7,4 @@ aligned/
 *.csv
 __pycache__
 *.sav
+*.bak
