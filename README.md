@@ -5,8 +5,7 @@ This reposiotry is a part of my research regrarding Face Morphing. This includes
 
 ### What is face morphing
 
-![output3](https://github.com/mataktelis11/face-morphing-algorithms/assets/61196956/d14b9ecb-9372-4b58-af7a-95b16e3470cd)
-
+![output5](https://github.com/mataktelis11/face-morphing-algorithms/assets/61196956/e0ebfbc7-2af3-4c6b-b362-3e9f26354bae)
 
 There are several known techniques for face morphing generation:
 
