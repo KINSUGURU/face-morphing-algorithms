@@ -11,7 +11,10 @@ There are several known techniques for face morphing generation:
 - GAN based: StyleGAN2, MIPGAN2
 - Diffusion based: using interpolation with Diffusion autoencoders (this is a relatively new approach)
 
-This repository has the notebook ```stylegan2_face_morphing_basics.ipynb``` as an experimental introduction to StyleGAN2 face morphing. Open with Google colab.
+This repository has the notebook ```stylegan2_face_morphing_basics.ipynb``` as an experimental introduction to StyleGAN2 face morphing.
+<a target="_blank" href="https://colab.research.google.com/github/mataktelis11/face-morphing-algorithms">
+  <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
+</a>
 
 We also provide the script ```opencv_morph.py```. As the title suggests it generates morphs with OpenCV.
 
