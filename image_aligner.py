@@ -128,6 +128,20 @@ def main():
 
         raw_img_path = os.path.join(args.raw, img_name)
 
+        if raw_img_path.endswith('.ppm'):
+            # https://github.com/dhar174/ppm-2-png/blob/master/ppm-2-png.py
+            
+            temp_image = PIL.Image.open(raw_img_path)
+            new_path = raw_img_path[:-4]
+            new_path = new_path + ".png"
+
+            temp_image.save(new_path)
+
+            print(f'Saved .ppm image as .png')
+            print(f' {raw_img_path} \t -> \t {new_path}')
+     
+            raw_img_path = new_path
+
         for i, face_landmarks in enumerate(landmarksDetector.get_landmarks(raw_img_path), start=1):
 
             face_img_name = '%s_%02d.png' % (os.path.splitext(img_name)[0], i)
