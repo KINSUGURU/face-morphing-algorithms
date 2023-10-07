@@ -42,9 +42,9 @@ Use ```image_aligner.py``` as seen above to align your images. Input images are 
 
 2. Generate Morphs
 ```
-$ python opencv_morph.py -s aligned/ -m morphs/ -p ~pairs.csv
+$ python opencv_morph.py -s aligned/ -m morphs/ -p pairs.csv
 ```
-This is script is used to generate landmark-based OpenCV morphs. The code is from this [repository](https://gitlab.idiap.ch/bob/bob.paper.icassp2022_morph_generate) and is based on [learnopencv.com](https://learnopencv.com/face-morph-using-opencv-cpp-python/).
+This is script is used to generate landmark-based OpenCV morphs. The code is from [this repository](https://gitlab.idiap.ch/bob/bob.paper.icassp2022_morph_generate) and is based on [learnopencv.com](https://learnopencv.com/face-morph-using-opencv-cpp-python/).
 
 3. Extract feature vectors
 

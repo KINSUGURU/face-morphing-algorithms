@@ -3,6 +3,7 @@
 morphenv/
 raw/
 morphed/
+morphs/
 aligned/
 *.csv
 __pycache__
